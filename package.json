@@ -1,0 +1,11 @@
+{
+  "dependencies": {
+    "@types/axios": "^0.14.4",
+    "@types/cheerio": "^0.22.35",
+    "axios": "^1.8.1",
+    "cheerio": "^1.0.0",
+    "https-proxy-agent": "^7.0.6",
+    "socks-proxy-agent": "^8.0.5",
+    "typescript": "^5.8.2"
+  }
+}
