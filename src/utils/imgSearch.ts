@@ -20,36 +20,38 @@ const extensions = [
 ]
 
 export async function imgSearch(targetUrl: string, resData: any): Promise<imgSearchResult> {
-    const imgs: string[] = [];
+    return new Promise(async (resolve) => {
+        const imgs: string[] = [];
 
-    try {
-        const $ = cheerio.load(resData);
-        const src = $("img").map((_, element) => $(element).attr("src")).get();
-        let validImgs = src.filter(src => extensions.some(extension => src.endsWith(extension)));
-        validImgs.map((img, index) => {
-            if (img.startsWith("/")) {
-                validImgs[index] = `${targetUrl}${img}`;
+        try {
+            const $ = cheerio.load(resData);
+            const src = $("img").map((_, element) => $(element).attr("src")).get();
+            let validImgs = src.filter(src => extensions.some(extension => src.endsWith(extension)));
+            validImgs.map((img, index) => {
+                if (img.startsWith("/")) {
+                    validImgs[index] = `${targetUrl}${img}`;
+                }
+            });
+    
+            imgs.push(...validImgs);
+    
+            if (imgs.length === 0) {
+                return resolve({
+                    status: "error",
+                    message: "Could not find image."
+                });
             }
+        } catch (e) {
+            if (e instanceof Error) {
+                return resolve({
+                    status: "error",
+                    message: e.message
+                });
+            }
+        }
+        resolve({
+            status: "success",
+            imgs: imgs
         });
-
-        imgs.push(...validImgs);
-
-        if (imgs.length === 0) {
-            return {
-                status: "error",
-                message: "Could not find image."
-            }
-        }
-    } catch (e) {
-        if (e instanceof Error) {
-            return {
-                status: "error",
-                message: e.message
-            }
-        }
-    }
-    return {
-        status: "success",
-        imgs: imgs
-    }
+    });
 }
