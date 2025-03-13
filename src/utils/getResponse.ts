@@ -24,65 +24,66 @@ export async function getResponse(
     selectProxy: string,
     selectClear: string
 ): Promise<getResponseResult> {
+    return new Promise(async (resolve) => {
+        let useProxy: boolean = false;
     
-    let useProxy: boolean = false;
-    
-    if (selectProxy === "y")
-        useProxy = true;
-    
-    if (!selectUrl.startsWith("http://") && !selectUrl.startsWith("https://")) {
-        return {
-            status: "error",
-            message: "url the invalid."
-        }
-    }
-    
-    logger.info(`Target: ${selectUrl}`);
-    
-    if (selectClear === "y") {
-        await fs.writeFile("data/urls.txt", "", "utf-8");
-        logger.info("Deleted: Contents of urls.txt");
-    }
-    
-    if (useProxy) {
-        proxies = (await fs.readFile("data/proxies.txt", "utf-8")).split("\n").filter(proxy => proxy.startsWith("http://") || proxy.startsWith("socks://"));
-        if (proxies.length === 0) {
+        if (selectProxy === "y")
+            useProxy = true;
+        
+        if (!selectUrl.startsWith("http://") && !selectUrl.startsWith("https://")) {
             return {
                 status: "error",
-                message: "proxy is missing in proxies.txt"
+                message: "url the invalid."
             }
         }
-    }
-    
-    try {
-        proxy = proxies[Math.floor(Math.random() * proxies.length)];
-        resData = await axios.get(selectUrl, {
-            httpsAgent: useProxy
-            ? (proxy.startsWith("http://")
-            ? new HttpsProxyAgent(proxy)
-            : (proxy.startsWith("socks://")
-                ? new SocksProxyAgent(proxy)
-                : undefined))
-            : undefined
+        
+        logger.info(`Target: ${selectUrl}`);
+        
+        if (selectClear === "y") {
+            await fs.writeFile("data/urls.txt", "", "utf-8");
+            logger.info("Deleted: Contents of urls.txt");
+        }
+        
+        if (useProxy) {
+            proxies = (await fs.readFile("data/proxies.txt", "utf-8")).split("\n").filter(proxy => proxy.startsWith("http://") || proxy.startsWith("socks://"));
+            if (proxies.length === 0) {
+                return resolve({
+                    status: "error",
+                    message: "proxy is missing in proxies.txt"
+                });
+            }
+        }
+        
+        try {
+            proxy = proxies[Math.floor(Math.random() * proxies.length)];
+            resData = await axios.get(selectUrl, {
+                httpsAgent: useProxy
+                ? (proxy.startsWith("http://")
+                ? new HttpsProxyAgent(proxy)
+                : (proxy.startsWith("socks://")
+                    ? new SocksProxyAgent(proxy)
+                    : undefined))
+                : undefined
+            });
+        
+            if (!(resData.status >= 200 && resData.status < 300)) {
+                return resolve({
+                    status: "error",
+                    message: resData.statusText
+                });
+            }
+        
+        } catch (e) {
+            if (e instanceof Error) {
+                return resolve({
+                    status: "error",
+                    message: e.message
+                });
+            }
+        }
+        resolve({
+            status: "success",
+            resData: resData.data || undefined
         });
-    
-        if (resData.status !== 200) {
-            return {
-                status: "error",
-                message: resData.statusText
-            }
-        }
-    
-    } catch (e) {
-        if (e instanceof Error) {
-            return {
-                status: "error",
-                message: e.message
-            }
-        }
-    }
-    return {
-        status: "success",
-        resData: resData.data || undefined
-    }
+    });
 }
