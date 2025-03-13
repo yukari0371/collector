@@ -5,7 +5,7 @@ export type getResponseResult =
 } | {
     status: "error";
     message: string;
-}
+};
 
 export type urlSearchResult =
 | {
@@ -14,7 +14,8 @@ export type urlSearchResult =
 } | {
     status: "error";
     message: string;
-}
+};
+
 export type imgSearchResult =
 | {
     status: "success";
@@ -22,4 +23,13 @@ export type imgSearchResult =
 } | {
     status: "error";
     message: string;
-}
+};
+
+export type allScrapeResult =
+| {
+    status: "success";
+    links: string[];
+} | {
+    status: "error";
+    message: string;
+};
